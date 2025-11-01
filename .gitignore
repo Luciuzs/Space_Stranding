@@ -1,0 +1,50 @@
+## Gradle
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+.gradletasknamecache
+
+## IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+bin/
+.project
+.classpath
+.settings/
+.vscode/
+*.swp
+*.swo
+*~
+
+## OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+## LibGDX
+android/assets/**
+
+## Compiled
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+## Logs
+*.log
+
+## Temporary files
+tmp/
+temp/
+
