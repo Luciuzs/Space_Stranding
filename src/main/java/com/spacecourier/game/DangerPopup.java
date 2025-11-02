@@ -13,11 +13,20 @@ public class DangerPopup {
     private final ShapeRenderer shapeRenderer;
     private final BitmapFont font;
     private final SpriteBatch batch;
+    private SpaceEvent currentEvent;
     
     public DangerPopup(ShapeRenderer shapeRenderer, BitmapFont font, SpriteBatch batch) {
         this.shapeRenderer = shapeRenderer;
         this.font = font;
         this.batch = batch;
+    }
+    
+    public void setEvent(SpaceEvent event) {
+        this.currentEvent = event;
+    }
+    
+    public SpaceEvent getEvent() {
+        return currentEvent;
     }
     
     public void render(float screenWidth, float screenHeight, com.badlogic.gdx.math.Matrix4 cameraCombined) {
@@ -47,14 +56,14 @@ public class DangerPopup {
         font.setColor(Color.RED);
         font.getData().setScale(3.0f);
         
-        String title = "DANGER!";
+        String title = (currentEvent != null) ? currentEvent.name.toUpperCase() : "DANGER!";
         GlyphLayout titleLayout = new GlyphLayout(font, title);
         float titleX = boxX + (boxWidth - titleLayout.width) / 2f;
         float titleY = boxY + boxHeight - 80f;
         font.draw(batch, titleLayout, titleX, titleY);
         
         font.getData().setScale(2.0f);
-        String message = "You encountered danger!";
+        String message = (currentEvent != null) ? currentEvent.description : "You encountered danger!";
         GlyphLayout messageLayout = new GlyphLayout(font, message);
         float messageX = boxX + (boxWidth - messageLayout.width) / 2f;
         float messageY = titleY - 80f;

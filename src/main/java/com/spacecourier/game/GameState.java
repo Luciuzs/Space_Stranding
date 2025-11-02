@@ -3,6 +3,8 @@ package com.spacecourier.game;
 
 public enum GameState {
     MENU,
-    GAME
+    GAME,
+    GAME_OVER,
+    WIN
 }
 
