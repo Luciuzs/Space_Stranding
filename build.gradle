@@ -10,13 +10,20 @@ repositories {
 }
 
 ext {
-    appName = 'space-courier'
+    appName = 'space-stranding'
     gdxVersion = '1.12.1'
 }
 
-sourceCompatibility = 21
-mainClassName = 'com.spacecourier.game.SpaceCourierGame'
 version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+application {
+    mainClass = 'com.spacecourier.game.SpaceStrandingGame'
+}
 
 dependencies {
     implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
