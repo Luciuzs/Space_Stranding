@@ -38,6 +38,11 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
     private Texture gameBackground;
     private Texture earthBackground;
     private Texture spaceTravelBackground;
+    private Texture menuBoxTexture;
+    private Texture newGameButtonTexture;
+    private Texture newGameButtonHoverTexture;
+    private Texture cursorTexture;
+    private Texture rockTexture;
     private Map<String, Texture> planetBackgrounds;
     
     private Player player;
@@ -46,8 +51,10 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
     private RouletteWheel rouletteWheel;
     private DangerPopup dangerPopup;
     private GameInputHandler inputHandler;
+    private SpaceTravel spaceTravel;
     private boolean showDangerPopup = false;
     private SpaceEvent currentEvent = null;
+    private int pendingDangerRating = 0;
     private boolean isFullscreen = false;
     private static final int WINDOWED_WIDTH = 1920;
     private static final int WINDOWED_HEIGHT = 1080;
@@ -63,6 +70,11 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
         gameBackground = new Texture("images/Game_Backround.jpeg");
         earthBackground = new Texture("images/Earth_Backround.jpeg");
         spaceTravelBackground = new Texture("images/Space_Travel.jpeg");
+        menuBoxTexture = new Texture("images/Menu_Screen.jpg");
+        newGameButtonTexture = new Texture("images/Button_White.png");
+        newGameButtonHoverTexture = new Texture("images/Button_Black.png");
+        cursorTexture = new Texture("images/cursor.png");
+        rockTexture = new Texture("images/rock.png");
         
         planetBackgrounds = new HashMap<>();
         planetBackgrounds.put("Earth", earthBackground);
@@ -78,11 +90,13 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
         
         player = new Player(null);
         
-        menuRenderer = new MenuRenderer(batch, shapeRenderer, font, background);
+        menuRenderer = new MenuRenderer(batch, shapeRenderer, font, background, menuBoxTexture, newGameButtonTexture, newGameButtonHoverTexture);
         gameRenderer = new GameRenderer(batch, shapeRenderer, font, gameBackground, earthBackground, spaceTravelBackground, player, planetBackgrounds);
         rouletteWheel = new RouletteWheel(shapeRenderer, font, batch);
         dangerPopup = new DangerPopup(shapeRenderer, font, batch);
         inputHandler = new GameInputHandler(GameState.MENU, "Earth", menuRenderer, gameRenderer, rouletteWheel, player);
+        spaceTravel = new SpaceTravel(batch, cursorTexture);
+        spaceTravel.setMiniGameTextures(rockTexture, spaceTravelBackground);
         
         Gdx.input.setInputProcessor(this);
     }
@@ -91,6 +105,41 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
     public void render() {
         camera.update();
         batch.setProjectionMatrix(camera.combined);
+        
+        spaceTravel.update();
+        
+        if (inputHandler.shouldStartMiniGame()) {
+            spaceTravel.startMiniGame();
+            pendingDangerRating = inputHandler.getMiniGameDangerRating();
+            inputHandler.clearMiniGameFlag();
+        }
+        
+        if (spaceTravel.isMiniGameActive()) {
+            spaceTravel.updateMiniGame(Gdx.graphics.getDeltaTime());
+            
+            if (spaceTravel.hasMiniGameCompleted()) {
+                spaceTravel.resetMiniGame();
+                inputHandler.setShowTravelBackground(false);
+                if (inputHandler.getTravelOrigin() != null && player.getCurrentPlanet() != null) {
+                    player.updateRouteProgress(inputHandler.getTravelOrigin(), player.getCurrentPlanet());
+                    int goldReward = inputHandler.consumePendingGoldReward();
+                    if (goldReward > 0) {
+                        player.addGold(goldReward);
+                    }
+                    
+                    if (player.hasWon()) {
+                        inputHandler.setCurrentState(GameState.WIN);
+                        inputHandler.clearTravelOrigin();
+                    }
+                }
+            } else if (spaceTravel.hasMiniGameFailed()) {
+                spaceTravel.resetMiniGame();
+                if (pendingDangerRating > 0) {
+                    rouletteWheel.startSpin(pendingDangerRating);
+                    pendingDangerRating = 0;
+                }
+            }
+        }
         
         rouletteWheel.update();
         
@@ -110,6 +159,8 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
         } else if (inputHandler.getCurrentState() == GameState.WIN) {
             renderWin();
         }
+
+        spaceTravel.renderCursor(camera.combined);
     }
     
     private void renderMenu() {
@@ -183,18 +234,34 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
     }
     
     private void renderGame() {
-        gameRenderer.render(inputHandler.isShowEarthBackground(), 
+        if (spaceTravel.isMiniGameActive()) {
+            spaceTravel.renderMiniGame(camera.combined);
+            
+            batch.begin();
+            font.getData().setScale(2.0f);
+            font.setColor(Color.WHITE);
+            float timeRemaining = spaceTravel.getMiniGameTimeRemaining();
+            String timeText = String.format("Time: %.1f", timeRemaining);
+            com.badlogic.gdx.graphics.g2d.GlyphLayout layout = new com.badlogic.gdx.graphics.g2d.GlyphLayout(font, timeText);
+            float x = (Gdx.graphics.getWidth() - layout.width) / 2f;
+            float y = Gdx.graphics.getHeight() - 50f;
+            font.draw(batch, layout, x, y);
+            batch.end();
+        } else {
+            gameRenderer.render(inputHandler.isShowEarthBackground(), 
                            inputHandler.isShowTravelBackground(),
                            inputHandler.isShowFuelMessage(),
                            inputHandler.getFuelCostMultiplier(),
                            inputHandler.isShowEarthHoverPopup(),
+                           inputHandler.isShowMarsHoverPopup(),
                            camera.combined);
-        
-        if (inputHandler.isShowTravelBackground()) {
-            rouletteWheel.render(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), camera.combined);
             
-            if (showDangerPopup) {
-                dangerPopup.render(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), camera.combined);
+            if (inputHandler.isShowTravelBackground()) {
+                rouletteWheel.render(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), camera.combined);
+                
+                if (showDangerPopup) {
+                    dangerPopup.render(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), camera.combined);
+                }
             }
         }
     }
@@ -215,10 +282,26 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
         gameBackground.dispose();
         earthBackground.dispose();
         spaceTravelBackground.dispose();
+        if (menuBoxTexture != null) {
+            menuBoxTexture.dispose();
+        }
+        if (newGameButtonTexture != null) {
+            newGameButtonTexture.dispose();
+        }
+        if (newGameButtonHoverTexture != null) {
+            newGameButtonHoverTexture.dispose();
+        }
         for (Texture texture : planetBackgrounds.values()) {
             if (texture != earthBackground) {
                 texture.dispose();
             }
+        }
+
+        if (spaceTravel != null) {
+            spaceTravel.dispose();
+        }
+        if (rockTexture != null) {
+            rockTexture.dispose();
         }
     }
     
@@ -271,6 +354,11 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
                 if (inputHandler.getCurrentState() != GameState.GAME_OVER) {
                     if (travelCompleted && inputHandler.getTravelOrigin() != null && player.getCurrentPlanet() != null) {
                         player.updateRouteProgress(inputHandler.getTravelOrigin(), player.getCurrentPlanet());
+                        
+                        int reward = inputHandler.consumePendingGoldReward();
+                        if (reward > 0) {
+                            player.addGold(reward);
+                        }
                         
                         if (player.hasWon()) {
                             inputHandler.setCurrentState(GameState.WIN);
@@ -347,9 +435,7 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
     
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
-        if (inputHandler.getCurrentState() == GameState.GAME) {
-            inputHandler.updateMouseHover(screenX, screenY);
-        }
+        inputHandler.updateMouseHover(screenX, screenY);
         return false;
     }
     

@@ -15,7 +15,12 @@ public class GameInputHandler {
     private int lastTravelFuelCost = 0;
     private float fuelCostMultiplier = 1.0f;
     private String travelOrigin = null;
+    private int pendingGoldReward = 0;
     private boolean showEarthHoverPopup = false;
+	private boolean showMarsHoverPopup = false;
+	private boolean hardMode = false;
+    private boolean shouldStartMiniGame = false;
+    private int miniGameDangerRating = 0;
     
     private MenuRenderer menuRenderer;
     private GameRenderer gameRenderer;
@@ -52,23 +57,44 @@ public class GameInputHandler {
             return true;
         }
 
-        if (screenX >= menuRenderer.startButtonX && screenX <= menuRenderer.startButtonX + menuRenderer.startButtonWidth &&
-            worldY >= menuRenderer.startButtonY && worldY <= menuRenderer.startButtonY + menuRenderer.startButtonHeight) {
-            currentState = GameState.GAME;
-            showEarthBackground = false;
-            showTravelBackground = false;
-            currentPlanet = null;
-            player.reset(null);
-            rouletteWheel.clearResult();
-            return true;
-        }
+		if (screenX >= menuRenderer.startButtonX && screenX <= menuRenderer.startButtonX + menuRenderer.startButtonWidth &&
+			worldY >= menuRenderer.startButtonY && worldY <= menuRenderer.startButtonY + menuRenderer.startButtonHeight) {
+			currentState = GameState.GAME;
+			showEarthBackground = false;
+			showTravelBackground = false;
+			currentPlanet = null;
+			player.reset(null);
+			player.setSelectedWinPlanet(null);
+			rouletteWheel.clearResult();
+			hardMode = false;
+			return true;
+		}
         
         return false;
     }
     
     private boolean handleGameClick(int screenX, float worldY) {
         if (showFuelMessage) {
-            showFuelMessage = false;
+            if (screenX >= gameRenderer.fuelBuyButtonX && 
+                screenX <= gameRenderer.fuelBuyButtonX + gameRenderer.fuelBuyButtonWidth &&
+                worldY >= gameRenderer.fuelBuyButtonY && 
+                worldY <= gameRenderer.fuelBuyButtonY + gameRenderer.fuelBuyButtonHeight) {
+                if (player.getGold() >= 100) {
+                    player.removeGold(100);
+                    player.addFuel(20);
+                    showFuelMessage = false;
+                }
+                return true;
+            }
+            
+            if (screenX >= gameRenderer.fuelCancelButtonX && 
+                screenX <= gameRenderer.fuelCancelButtonX + gameRenderer.fuelCancelButtonWidth &&
+                worldY >= gameRenderer.fuelCancelButtonY && 
+                worldY <= gameRenderer.fuelCancelButtonY + gameRenderer.fuelCancelButtonHeight) {
+                showFuelMessage = false;
+                return true;
+            }
+            
             return true;
         }
         
@@ -80,6 +106,10 @@ public class GameInputHandler {
             if (!rouletteWheel.isSpinning()) {
                 if (travelOrigin != null && player.getCurrentPlanet() != null) {
                     player.updateRouteProgress(travelOrigin, player.getCurrentPlanet());
+                    if (pendingGoldReward > 0) {
+                        player.addGold(pendingGoldReward);
+                        pendingGoldReward = 0;
+                    }
                     
                     if (player.hasWon()) {
                         currentState = GameState.WIN;
@@ -129,10 +159,16 @@ public class GameInputHandler {
                             showEarthBackground = false;
                             showTravelBackground = true;
                             fuelCostMultiplier = 1.0f;
-                            int dangerRating = (int)(selectedRoute.riskLevel * 10f);
+					int dangerRating = (int)(selectedRoute.riskLevel * 10f);
+						if (hardMode) {
+							dangerRating += 2;
+						}
                             if (dangerRating < 1) dangerRating = 1;
                             if (dangerRating > 10) dangerRating = 10;
-                            rouletteWheel.startSpin(dangerRating);
+                            
+                            pendingGoldReward = dangerRating * 10;
+                            shouldStartMiniGame = true;
+                            miniGameDangerRating = dangerRating;
                             return true;
                         } else {
                             showFuelMessage = true;
@@ -147,10 +183,12 @@ public class GameInputHandler {
             float dyEarth = worldY - gameRenderer.earthCenterY;
             float distanceEarth = (float) Math.sqrt(dxEarth * dxEarth + dyEarth * dyEarth);
             
-            if (distanceEarth <= gameRenderer.earthRadius) {
+			if (distanceEarth <= gameRenderer.earthRadius) {
                 if (player.getCurrentPlanet() == null) {
-                    player.setCurrentPlanet("Earth");
+					player.setCurrentPlanet("Earth");
                     currentPlanet = "Earth";
+					hardMode = false;
+					player.setSelectedWinPlanet("Earth");
                 }
                 showEarthBackground = true;
                 return true;
@@ -160,9 +198,11 @@ public class GameInputHandler {
             float dyMars = worldY - gameRenderer.marsCenterY;
             float distanceMars = (float) Math.sqrt(dxMars * dxMars + dyMars * dyMars);
             
-            if (distanceMars <= gameRenderer.marsRadius) {
-                player.setCurrentPlanet("Mars");
+			if (distanceMars <= gameRenderer.marsRadius) {
+				player.setCurrentPlanet("Mars");
                 currentPlanet = "Mars";
+				hardMode = true;
+				player.setSelectedWinPlanet("Mars");
                 showEarthBackground = false;
                 return true;
             }
@@ -242,11 +282,17 @@ public class GameInputHandler {
     public String getTravelOrigin() {
         return travelOrigin;
     }
+
+    public int consumePendingGoldReward() {
+        int reward = pendingGoldReward;
+        pendingGoldReward = 0;
+        return reward;
+    }
     
     public void updateMouseHover(int screenX, int screenY) {
-        if (currentState == GameState.GAME && 
-            !showEarthBackground && !showTravelBackground && 
-            player.getCurrentPlanet() == null) {
+		if (currentState == GameState.GAME && 
+			!showEarthBackground && !showTravelBackground && 
+			player.getCurrentPlanet() == null) {
             
             float worldY = Gdx.graphics.getHeight() - screenY;
             
@@ -254,14 +300,42 @@ public class GameInputHandler {
             float dyEarth = worldY - gameRenderer.earthCenterY;
             float distanceEarth = (float) Math.sqrt(dxEarth * dxEarth + dyEarth * dyEarth);
             
-            showEarthHoverPopup = distanceEarth <= gameRenderer.earthRadius;
-        } else {
-            showEarthHoverPopup = false;
+			showEarthHoverPopup = distanceEarth <= gameRenderer.earthRadius;
+			
+			float dxMars = screenX - gameRenderer.marsCenterX;
+			float dyMars = worldY - gameRenderer.marsCenterY;
+			float distanceMars = (float) Math.sqrt(dxMars * dxMars + dyMars * dyMars);
+			showMarsHoverPopup = distanceMars <= gameRenderer.marsRadius;
+		} else if (currentState == GameState.MENU) {
+			float worldY = Gdx.graphics.getHeight() - screenY;
+			boolean overNewGame = screenX >= menuRenderer.startButtonX && screenX <= menuRenderer.startButtonX + menuRenderer.startButtonWidth &&
+							   worldY >= menuRenderer.startButtonY && worldY <= menuRenderer.startButtonY + menuRenderer.startButtonHeight;
+			menuRenderer.setHoverNewGame(overNewGame);
+		} else {
+			showEarthHoverPopup = false;
+			showMarsHoverPopup = false;
         }
     }
     
     public boolean isShowEarthHoverPopup() {
         return showEarthHoverPopup;
     }
+	
+	public boolean isShowMarsHoverPopup() {
+		return showMarsHoverPopup;
+	}
+	
+	public boolean shouldStartMiniGame() {
+		return shouldStartMiniGame;
+	}
+	
+	public int getMiniGameDangerRating() {
+		return miniGameDangerRating;
+	}
+	
+	public void clearMiniGameFlag() {
+		shouldStartMiniGame = false;
+		miniGameDangerRating = 0;
+	}
 }
 

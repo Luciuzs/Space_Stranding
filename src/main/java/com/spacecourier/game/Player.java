@@ -14,8 +14,9 @@ public class Player {
     private Set<String> visitedPlanets;
     
     private Map<String, Integer> routeProgress;
+	private String selectedWinPlanet;
     
-    private static final int INITIAL_FUEL = 300;
+    private static final int INITIAL_FUEL = 100;
     private static final int INITIAL_GOLD = 100;
     
     public Player(String startingPlanet) {
@@ -24,10 +25,11 @@ public class Player {
         this.currentPlanet = startingPlanet;
         this.previousPlanet = null;
         this.visitedPlanets = new HashSet<>();
-        this.routeProgress = new HashMap<>();
+		this.routeProgress = new HashMap<>();
         for (RouteSequence route : RouteSequence.getWinRoutes()) {
             routeProgress.put(route.getName(), 0);
         }
+		this.selectedWinPlanet = startingPlanet;
         if (startingPlanet != null) {
             this.visitedPlanets.add(startingPlanet);
         }
@@ -105,6 +107,9 @@ public class Player {
         boolean routeCompleted = false;
         
         for (RouteSequence route : RouteSequence.getWinRoutes()) {
+			if (selectedWinPlanet != null && !route.getName().contains(selectedWinPlanet)) {
+				continue;
+			}
             String routeName = route.getName();
             int currentProgress = routeProgress.getOrDefault(routeName, 0);
             java.util.List<String> planets = route.getPlanets();
@@ -131,6 +136,9 @@ public class Player {
     
     public boolean hasWon() {
         for (RouteSequence route : RouteSequence.getWinRoutes()) {
+			if (selectedWinPlanet != null && !route.getName().contains(selectedWinPlanet)) {
+				continue;
+			}
             String routeName = route.getName();
             int progress = routeProgress.getOrDefault(routeName, 0);
             if (progress < route.getPlanets().size() - 1) {
@@ -157,6 +165,15 @@ public class Player {
         if (startingPlanet != null) {
             this.visitedPlanets.add(startingPlanet);
         }
+		this.selectedWinPlanet = startingPlanet;
     }
+	
+	public void setSelectedWinPlanet(String planet) {
+		this.selectedWinPlanet = planet;
+	}
+	
+	public String getSelectedWinPlanet() {
+		return selectedWinPlanet;
+	}
 }
 

@@ -56,18 +56,32 @@ public class DangerPopup {
         font.setColor(Color.RED);
         font.getData().setScale(3.0f);
         
-        String title = (currentEvent != null) ? currentEvent.name.toUpperCase() : "DANGER!";
+        
+        String title = (currentEvent != null) ? currentEvent.name.toUpperCase() : "Null Danger";
         GlyphLayout titleLayout = new GlyphLayout(font, title);
         float titleX = boxX + (boxWidth - titleLayout.width) / 2f;
         float titleY = boxY + boxHeight - 80f;
         font.draw(batch, titleLayout, titleX, titleY);
         
         font.getData().setScale(2.0f);
-        String message = (currentEvent != null) ? currentEvent.description : "You encountered danger!";
-        GlyphLayout messageLayout = new GlyphLayout(font, message);
-        float messageX = boxX + (boxWidth - messageLayout.width) / 2f;
-        float messageY = titleY - 80f;
-        font.draw(batch, messageLayout, messageX, messageY);
+        String message = (currentEvent != null) ? currentEvent.description : "Null event";
+        GlyphLayout testLayout = new GlyphLayout(font, message);
+        float maxWidth = boxWidth - 80f;
+        
+        if (testLayout.width > maxWidth) {
+            int mid = message.length() / 2;
+            int spacePos = message.indexOf(" ", mid);
+            if (spacePos > 0) message = message.substring(0, spacePos) + "\n" + message.substring(spacePos + 1);
+        }
+        
+        String[] lines = message.split("\n");
+        float lineHeight = font.getLineHeight();
+        for (int i = 0; i < lines.length; i++) {
+            GlyphLayout messageLayout = new GlyphLayout(font, lines[i]);
+            float messageX = boxX + (boxWidth - messageLayout.width) / 2f;
+            float messageY = titleY - 80f - (i * lineHeight);
+            font.draw(batch, messageLayout, messageX, messageY);
+        }
         
         font.getData().setScale(1.5f);
         String clickText = "Click to continue...";
