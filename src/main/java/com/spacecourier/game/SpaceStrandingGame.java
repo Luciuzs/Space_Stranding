@@ -160,7 +160,9 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
             renderWin();
         }
 
-        spaceTravel.renderCursor(camera.combined);
+        if (spaceTravel.isMiniGameActive()) {
+            spaceTravel.renderCursor(camera.combined);
+        }
     }
     
     private void renderMenu() {
