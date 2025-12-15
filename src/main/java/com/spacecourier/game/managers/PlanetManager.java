@@ -39,6 +39,7 @@ public class PlanetManager {
         DANGER_RATINGS.put("Jupiter", 6);
         DANGER_RATINGS.put("Saturn", 5);
         DANGER_RATINGS.put("Venus", 3);
+        DANGER_RATINGS.put("Earth", 1);
         
         List<Route> earthRoutes = new ArrayList<>();
         earthRoutes.add(new Route(EARTH, MARS, 30, 0.2f));

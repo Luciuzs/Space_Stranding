@@ -29,6 +29,9 @@ dependencies {
     implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
     implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
     implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.3'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -39,4 +42,8 @@ tasks.withType(JavaCompile).configureEach {
 
 run {
     ignoreExitValue = true
+}
+
+test {
+    useJUnitPlatform()
 }

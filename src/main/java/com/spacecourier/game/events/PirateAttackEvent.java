@@ -16,8 +16,10 @@ public class PirateAttackEvent extends SpaceEvent {
     @Override
     public boolean apply(Player player, GameInputHandler inputHandler) {
         player.setGold(0);
-        inputHandler.setCurrentState(GameState.GAME_OVER);
-        inputHandler.setShowTravelBackground(false);
+        if (inputHandler != null) {
+            inputHandler.setCurrentState(GameState.GAME_OVER);
+            inputHandler.setShowTravelBackground(false);
+        }
         return false; 
     }
 }
