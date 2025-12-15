@@ -1,5 +1,12 @@
 package com.spacecourier.game;
 
+import com.spacecourier.game.models.Player;
+import com.spacecourier.game.managers.PlanetManager;
+
+import com.spacecourier.game.events.EventFactory;
+import com.spacecourier.game.events.SpaceEvent;
+import com.spacecourier.game.constants.GameConstants;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -53,7 +60,7 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
     private GameInputHandler inputHandler;
     private SpaceTravel spaceTravel;
     private boolean showDangerPopup = false;
-    private SpaceEvent currentEvent = null;
+    private com.spacecourier.game.events.SpaceEvent currentEvent = null;
     private int pendingDangerRating = 0;
     private boolean isFullscreen = false;
     private static final int WINDOWED_WIDTH = 1920;
@@ -144,7 +151,7 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
         rouletteWheel.update();
         
         if (rouletteWheel.justFinishedDanger()) {
-            currentEvent = EventManager.generateRandomEvent();
+            currentEvent = EventFactory.createRandomEvent();
             dangerPopup.setEvent(currentEvent);
             showDangerPopup = true;
             rouletteWheel.clearJustFinishedDanger();
@@ -381,44 +388,10 @@ public class SpaceStrandingGame extends ApplicationAdapter implements InputProce
         return inputHandler.handleTouchDown(screenX, screenY);
     }
     
-    private boolean handleEvent(SpaceEvent event) {
-        switch (event.type) {
-            case PIRATE_ATTACK:
-                player.setGold(0);
-                inputHandler.setCurrentState(GameState.GAME_OVER);
-                inputHandler.setShowTravelBackground(false);
-                return false;
-                
-            case SPACE_STORM:
-                int fuelLost20 = (int)(player.getCurrentFuel() * 0.2f);
-                player.consumeFuel(fuelLost20);
-                return true;
-                
-            case FUEL_LEAK:
-                int fuelLost30 = (int)(player.getCurrentFuel() * 0.3f);
-                player.consumeFuel(fuelLost30);
-                return true;
-                
-            case NAVIGATION_ERROR:
-                String previousPlanet = player.getPreviousPlanet();
-                if (previousPlanet != null) {
-                    int refundFuel = inputHandler.getLastTravelFuelCost();
-                    if (refundFuel > 0) {
-                        player.addFuel(refundFuel);
-                        inputHandler.clearLastTravelFuelCost();
-                    }
-                    inputHandler.clearTravelOrigin();
-                    player.setCurrentPlanetWithoutTracking(previousPlanet);
-                    inputHandler.setCurrentPlanet(previousPlanet);
-                    inputHandler.setFuelCostMultiplier(1.5f);
-                    if (previousPlanet.equals("Earth")) {
-                        inputHandler.setShowEarthBackground(true);
-                    }
-                }
-                return false;
-        }
-        return false;
-    }
+    private boolean handleEvent(com.spacecourier.game.events.SpaceEvent event) {
+    // Use polymorphic apply method
+    return event.apply(player, inputHandler);
+}
     
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {

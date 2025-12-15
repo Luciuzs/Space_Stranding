@@ -1,5 +1,8 @@
 // Planet manageris: planet info and cost
-package com.spacecourier.game;
+package com.spacecourier.game.managers;
+
+import com.spacecourier.game.models.Planet;
+import com.spacecourier.game.models.Route;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -92,15 +95,4 @@ public class PlanetManager {
     }
 }
 
-class Planet {
-    public final String name;
-    public final int fuelCost;
-    public final int dangerRating;
-    
-    public Planet(String name, int fuelCost, int dangerRating) {
-        this.name = name;
-        this.fuelCost = fuelCost;
-        this.dangerRating = dangerRating;
-    }
-}
 

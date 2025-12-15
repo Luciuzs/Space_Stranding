@@ -1,6 +1,14 @@
 // Render klases - draw arba render ekrano elementus
 package com.spacecourier.game;
 
+import com.spacecourier.game.models.Player;
+import com.spacecourier.game.models.Planet;
+import com.spacecourier.game.models.Route;
+import com.spacecourier.game.models.RouteSequence;
+import com.spacecourier.game.managers.PlanetManager;
+import com.spacecourier.game.rendering.PlayerStatsRenderer;
+import com.spacecourier.game.rendering.RouteProgressRenderer;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -30,6 +38,9 @@ public class GameRenderer {
     public float fuelCancelButtonX, fuelCancelButtonY, fuelCancelButtonWidth, fuelCancelButtonHeight;
     
     private ArrayList<PlanetOptionBounds> planetOptionBounds = new ArrayList<>();
+
+    private PlayerStatsRenderer statsRenderer;
+    private RouteProgressRenderer routeRenderer;
     
     public GameRenderer(SpriteBatch batch, ShapeRenderer shapeRenderer, BitmapFont font,
                        Texture gameBackground, Texture earthBackground, Texture spaceTravelBackground,
@@ -42,6 +53,9 @@ public class GameRenderer {
         this.spaceTravelBackground = spaceTravelBackground;
         this.player = player;
         this.planetBackgrounds = planetBackgrounds;
+        this.statsRenderer = new PlayerStatsRenderer(shapeRenderer, font, player);
+        this.routeRenderer = new RouteProgressRenderer(shapeRenderer, font, player);
+
     }
     
 	public void render(boolean showEarthBackground, boolean showTravelBackground, boolean showFuelMessage, float fuelCostMultiplier, boolean showEarthHoverPopup, boolean showMarsHoverPopup, com.badlogic.gdx.math.Matrix4 cameraCombined) {
@@ -68,7 +82,7 @@ public class GameRenderer {
         }
         batch.end();
         
-        renderPlayerStats(cameraCombined);
+        statsRenderer.render(batch, cameraCombined);
         
         if (!showEarthBackground && !showTravelBackground && player.getCurrentPlanet() == null) {
             float earthX = 1225f;
@@ -201,9 +215,9 @@ public class GameRenderer {
 		}
         
         if ((showEarthBackground || (player.getCurrentPlanet() != null)) && !showTravelBackground) {
-            renderEarthRouteProgress(cameraCombined);
-        }
+            routeRenderer.render(batch, cameraCombined);
     }
+}
     
     private void renderEarthRouteProgress(com.badlogic.gdx.math.Matrix4 cameraCombined) {
 		java.util.List<RouteSequence> allRoutes = RouteSequence.getWinRoutes();

@@ -1,6 +1,11 @@
 // Input klase - migtuku ir paspaudimo atvejai
 package com.spacecourier.game;
 
+import com.spacecourier.game.models.Player;
+import com.spacecourier.game.models.Planet;
+import com.spacecourier.game.models.Route;
+import com.spacecourier.game.managers.PlanetManager;
+
 import com.badlogic.gdx.Gdx;
 import java.util.ArrayList;
 import java.util.List;

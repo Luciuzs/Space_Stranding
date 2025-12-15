@@ -1,5 +1,7 @@
 // Player class: likuciai
-package com.spacecourier.game;
+package com.spacecourier.game.models;
+
+import com.spacecourier.game.constants.GameConstants;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,8 +18,8 @@ public class Player {
     private Map<String, Integer> routeProgress;
 	private String selectedWinPlanet;
     
-    private static final int INITIAL_FUEL = 100;
-    private static final int INITIAL_GOLD = 100;
+    private static final int INITIAL_FUEL = GameConstants.INITIAL_FUEL;
+    private static final int INITIAL_GOLD = GameConstants.INITIAL_GOLD;
     
     public Player(String startingPlanet) {
         this.currentFuel = INITIAL_FUEL;

@@ -1,6 +1,9 @@
 // Danger box klase:  pop up langas
 package com.spacecourier.game;
 
+import com.spacecourier.game.events.SpaceEvent;
+
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -13,7 +16,7 @@ public class DangerPopup {
     private final ShapeRenderer shapeRenderer;
     private final BitmapFont font;
     private final SpriteBatch batch;
-    private SpaceEvent currentEvent;
+    private com.spacecourier.game.events.SpaceEvent currentEvent;
     
     public DangerPopup(ShapeRenderer shapeRenderer, BitmapFont font, SpriteBatch batch) {
         this.shapeRenderer = shapeRenderer;
@@ -57,14 +60,14 @@ public class DangerPopup {
         font.getData().setScale(3.0f);
         
         
-        String title = (currentEvent != null) ? currentEvent.name.toUpperCase() : "Null Danger";
+        String title = (currentEvent != null) ? currentEvent.getName().toUpperCase() : "Null Danger";
         GlyphLayout titleLayout = new GlyphLayout(font, title);
         float titleX = boxX + (boxWidth - titleLayout.width) / 2f;
         float titleY = boxY + boxHeight - 80f;
         font.draw(batch, titleLayout, titleX, titleY);
         
         font.getData().setScale(2.0f);
-        String message = (currentEvent != null) ? currentEvent.description : "Null event";
+        String message = (currentEvent != null) ? currentEvent.getDescription() : "Null event";
         GlyphLayout testLayout = new GlyphLayout(font, message);
         float maxWidth = boxWidth - 80f;
         

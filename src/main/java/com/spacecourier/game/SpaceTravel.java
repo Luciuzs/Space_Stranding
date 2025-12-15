@@ -1,5 +1,8 @@
 package com.spacecourier.game;
 
+import com.spacecourier.game.constants.GameConstants;
+import com.spacecourier.game.models.Rock;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -13,66 +16,28 @@ public class SpaceTravel {
     private final Texture cursorTexture;
     private Texture rockTexture;
     private Texture spaceTravelBackground;
-    private float scale = 0.20f;
+    private float scale = GameConstants.CURSOR_SCALE;
     private int lastX = -1;
     private int lastY = -1;
     
     private ArrayList<Rock> rocks;
     private float gameTimer;
-    private static final float GAME_DURATION = 5.0f;
+    private static final float GAME_DURATION = GameConstants.MINI_GAME_DURATION;
     private boolean isMiniGameActive;
     private boolean hasFailed;
     private boolean hasCompleted;
     private Random random;
     
     private float rockSpawnTimer;
-    private static final float MIN_SPAWN_INTERVAL = 0.1f;
-    private static final float MAX_SPAWN_INTERVAL = 0.5f;
+    private static final float MIN_SPAWN_INTERVAL = GameConstants.MIN_SPAWN_INTERVAL;
+    private static final float MAX_SPAWN_INTERVAL = GameConstants.MAX_SPAWN_INTERVAL;
     private float nextSpawnInterval;
     
-    private static final float ROCK_SIZE = 140f;
-    private static final float ROCK_COLLISION_SCALE = 0.5f;
-    private static final float ROCK_FALL_SPEED = 250f;
-    private static final float ROCK_SPEED_INCREASE = 10f;
+    private static final float ROCK_SIZE = GameConstants.ROCK_SIZE;
+    private static final float ROCK_COLLISION_SCALE = GameConstants.ROCK_COLLISION_SCALE;
+    private static final float ROCK_FALL_SPEED = GameConstants.ROCK_FALL_SPEED;
+    private static final float ROCK_SPEED_INCREASE = GameConstants.ROCK_SPEED_INCREASE;
     
-    private class Rock {
-        float x;
-        float y;
-        float speed;
-        
-        Rock(float x, float speed, float screenHeight) {
-            this.x = x;
-            this.y = screenHeight + 200f;
-            this.speed = speed;
-        }
-        
-        void update(float deltaTime) {
-            y -= speed * deltaTime;
-        }
-        
-        boolean isOffScreen() {
-            return y + ROCK_SIZE < 0;
-        }
-        
-        boolean checkCollision(float cursorX, float cursorY, float cursorWidth, float cursorHeight) {
-            float cursorLeft = cursorX;
-            float cursorRight = cursorX + cursorWidth;
-            float cursorBottom = cursorY - cursorHeight + 60f;
-            float cursorTop = cursorY + 80f;
-            
-            float collisionSize = ROCK_SIZE * ROCK_COLLISION_SCALE;
-            float rockCenterX = x + ROCK_SIZE / 2f;
-            float rockCenterY = y - ROCK_SIZE / 2f;
-            
-            float rockLeft = rockCenterX - collisionSize / 2f;
-            float rockRight = rockCenterX + collisionSize / 2f;
-            float rockBottom = rockCenterY - collisionSize / 2f;
-            float rockTop = rockCenterY + collisionSize / 2f;
-            
-            return !(cursorRight < rockLeft || cursorLeft > rockRight || 
-                    cursorTop < rockBottom || cursorBottom > rockTop);
-        }
-    }
 
     public SpaceTravel(SpriteBatch batch, Texture cursorTexture) {
         this.batch = batch;
@@ -217,7 +182,7 @@ public class SpaceTravel {
         
         if (rockTexture != null) {
             for (Rock rock : rocks) {
-                batch.draw(rockTexture, rock.x, rock.y - ROCK_SIZE, ROCK_SIZE, ROCK_SIZE);
+                batch.draw(rockTexture, rock.getX(), rock.getY() - ROCK_SIZE, ROCK_SIZE, ROCK_SIZE);
             }
         }
         

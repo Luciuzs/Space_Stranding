@@ -1,6 +1,8 @@
 // Danger rulete: logika ir rezultatai ruletes
 package com.spacecourier.game;
 
+import com.spacecourier.game.constants.GameConstants;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
